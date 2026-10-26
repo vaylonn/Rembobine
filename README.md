@@ -1,0 +1,63 @@
+# Rembobine
+
+App perso pour suivre les films et séries que tu regardes, avec des
+recommandations calculées à partir de ton historique et des tendances du moment.
+Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
+
+## Fonctionnalités
+
+- **Recherche** de films et séries (TMDB, en français).
+- **Suivi** : Vu, En cours, À voir, Abandonné, note sur 10, progression
+  saison / épisode pour les séries (bouton « +1 épisode »).
+- **Fiche** de chaque titre : synopsis, genres, distribution, et où le regarder
+  en France (streaming, location, achat).
+- **Recommandations** (`/decouvrir` et page d'accueil) qui combinent :
+  - les recommandations TMDB de tes titres les mieux notés, pondérées par ta note ;
+  - ton profil de genres calculé sur toute ta bibliothèque (les titres mal notés
+    ou abandonnés font baisser leurs genres) ;
+  - un bonus pour ce qui est en tendance cette semaine.
+
+  Les titres déjà dans ta bibliothèque sont exclus. La logique est dans
+  `src/lib/scoring.ts`.
+- **Bibliothèque** filtrable par type et statut, avec quelques statistiques.
+- Accès protégé par un **mot de passe unique**.
+
+## Stack
+
+Next.js 16 (App Router, Server Actions) · Tailwind CSS 4 · Postgres (Neon) via
+Drizzle ORM · API TMDB.
+
+## Déployer sur Vercel
+
+1. **Clé TMDB** : crée un compte sur [themoviedb.org](https://www.themoviedb.org),
+   puis dans *Paramètres → API*, récupère le **jeton d'accès en lecture (v4)**.
+2. **Projet Vercel** : importe ce dépôt depuis le tableau de bord Vercel.
+3. **Base de données** : dans le projet Vercel, onglet *Storage*, ajoute une base
+   **Neon** (offre gratuite). Vercel crée automatiquement `DATABASE_URL`.
+4. **Variables d'environnement** (*Settings → Environment Variables*) :
+
+   | Variable | Valeur |
+   | --- | --- |
+   | `TMDB_API_TOKEN` | le jeton v4 de l'étape 1 |
+   | `APP_PASSWORD` | le mot de passe de ton choix |
+   | `SESSION_SECRET` | 32 caractères aléatoires ou plus (`openssl rand -base64 32`) |
+
+5. **Redéploie**. Les migrations de la base s'appliquent toutes seules pendant le
+   build (`scripts/migrate.mjs`).
+
+## En local
+
+```bash
+cp .env.example .env.local   # puis remplis les valeurs
+npm install
+npm run db:migrate           # crée les tables
+npm run dev
+```
+
+Après une modification de `src/lib/schema.ts`, génère une migration avec
+`npm run db:generate` et commite le dossier `drizzle/`.
+
+---
+
+Données fournies par [TMDB](https://www.themoviedb.org). Ce produit utilise
+l'API TMDB sans être approuvé ni certifié par TMDB.
