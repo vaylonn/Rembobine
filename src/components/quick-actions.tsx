@@ -18,7 +18,7 @@ type Props = {
 /** Affiche + petit menu pour ajouter (ou masquer) un titre sans ouvrir sa fiche. */
 export function QuickActions({ kind, mediaType, id, title, children }: Props) {
   const [open, setOpen] = useState(false);
-  const [done, setDone] = useState<"planned" | "watched" | "dismissed" | null>(null);
+  const [done, setDone] = useState<"planned" | "watching" | "watched" | "dismissed" | null>(null);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -78,7 +78,7 @@ export function QuickActions({ kind, mediaType, id, title, children }: Props) {
     );
   }
 
-  const added = done === "planned" || done === "watched";
+  const added = done !== null;
   const item = "block w-full px-3 py-2 text-left text-sm hover:bg-white/10";
 
   return (
@@ -102,6 +102,11 @@ export function QuickActions({ kind, mediaType, id, title, children }: Props) {
             <button type="button" className={item} onClick={() => act("planned", () => quickAdd(mediaType, id, "planned"))}>
               À voir
             </button>
+            {mediaType === "tv" && (
+              <button type="button" className={item} onClick={() => act("watching", () => quickAdd(mediaType, id, "watching"))}>
+                Je regarde
+              </button>
+            )}
             <button type="button" className={item} onClick={() => act("watched", () => quickAdd(mediaType, id, "watched", 8))}>
               👍 Vu, j&apos;ai aimé
             </button>

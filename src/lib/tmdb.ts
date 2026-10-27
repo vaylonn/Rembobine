@@ -190,6 +190,7 @@ export type EpisodeStatus = {
   lastAired: Episode | null;
   next: Episode | null;
   ended: boolean;
+  backdropPath: string | null;
 };
 
 function episode(raw: RawEpisode | null | undefined): Episode | null {
@@ -209,6 +210,7 @@ export async function getEpisodeStatus(id: number): Promise<EpisodeStatus | null
     last_episode_to_air?: RawEpisode | null;
     next_episode_to_air?: RawEpisode | null;
     status?: string;
+    backdrop_path?: string | null;
   };
   try {
     raw = await tmdb(`/tv/${id}`, {}, 6 * HOUR);
@@ -220,6 +222,7 @@ export async function getEpisodeStatus(id: number): Promise<EpisodeStatus | null
     lastAired: episode(raw.last_episode_to_air),
     next: episode(raw.next_episode_to_air),
     ended: raw.status === "Ended" || raw.status === "Canceled",
+    backdropPath: raw.backdrop_path ?? null,
   };
 }
 

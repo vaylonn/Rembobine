@@ -4,14 +4,16 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { logout } from "@/app/connexion/actions";
-import { CompassIcon, HomeIcon, LibraryIcon, LogoutIcon, PlayIcon, SearchIcon } from "./icons";
+import { CompassIcon, LibraryIcon, LogoutIcon, PlayIcon, SearchIcon } from "./icons";
 
+// Le suivi d'abord, la découverte ensuite.
 const LINKS = [
-  { href: "/", label: "Accueil", icon: HomeIcon },
-  { href: "/a-suivre", label: "À suivre", icon: PlayIcon },
-  { href: "/decouvrir", label: "Découvrir", icon: CompassIcon },
+  { href: "/", label: "Suivi", icon: PlayIcon },
   { href: "/bibliotheque", label: "Bibliothèque", icon: LibraryIcon },
+  { href: "/decouvrir", label: "Découvrir", icon: CompassIcon },
 ];
+
+const TABS = [LINKS[0], LINKS[1], { href: "/recherche", label: "Ajouter", icon: SearchIcon }, LINKS[2]];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -36,7 +38,7 @@ function SearchField() {
         name="q"
         type="search"
         defaultValue={query}
-        placeholder="Films, séries…"
+        placeholder="Ajouter un film, une série…"
         aria-label="Rechercher"
         className="input bg-white/5 py-1.5 pl-10 text-sm backdrop-blur"
       />
@@ -104,8 +106,8 @@ export function Header() {
 
       {/* Barre d'onglets en bas de l'écran sur mobile. */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden">
-        <div className="grid grid-cols-5">
-          {[...LINKS.slice(0, 3), { href: "/recherche", label: "Recherche", icon: SearchIcon }, LINKS[3]].map((l) => {
+        <div className="grid grid-cols-4">
+          {TABS.map((l) => {
             const active = isActive(pathname, l.href);
             const Icon = l.icon;
             return (
