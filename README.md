@@ -33,7 +33,8 @@ Drizzle ORM · API TMDB.
    puis dans *Paramètres → API*, récupère le **jeton d'accès en lecture (v4)**.
 2. **Projet Vercel** : importe ce dépôt depuis le tableau de bord Vercel.
 3. **Base de données** : dans le projet Vercel, onglet *Storage*, ajoute une base
-   **Neon** (offre gratuite). Vercel crée automatiquement `DATABASE_URL`.
+   **Neon** (offre gratuite). Vercel crée automatiquement `DATABASE_URL`
+   (ou `NEON_DATABASE_URL` si l'intégration ajoute un préfixe : les deux marchent).
 4. **Variables d'environnement** (*Settings → Environment Variables*) :
 
    | Variable | Valeur |

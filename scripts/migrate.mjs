@@ -3,8 +3,9 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { migrate } from "drizzle-orm/neon-http/migrator";
+import { databaseUrl } from "../src/lib/database-url.mjs";
 
-const url = process.env.DATABASE_URL;
+const url = databaseUrl();
 if (!url) {
   console.log("[migrate] DATABASE_URL absent, migrations ignorées.");
   process.exit(0);
