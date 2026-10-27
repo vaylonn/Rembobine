@@ -7,8 +7,13 @@ Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
 ## Fonctionnalités
 
 - **Recherche** de films et séries (TMDB, en français).
-- **Suivi** : Vu, En cours, À voir, Abandonné, note sur 10, progression
-  saison / épisode pour les séries (bouton « +1 épisode »).
+- **Suivi** : Vu, En cours, À voir, Abandonné, note sur 10.
+- **Historique** : revisionnages datés pour les films (date modifiable), et
+  suivi épisode par épisode pour les séries (grille par saison, « +1 épisode »).
+- **Ajout rapide** depuis les affiches (À voir, Déjà vu), et « Pas intéressé »
+  sur une recommandation pour qu'elle ne revienne plus.
+- **Installable sur mobile** (PWA) : depuis le navigateur, « Ajouter à l'écran
+  d'accueil » donne une icône et un affichage plein écran.
 - **Fiche** de chaque titre : synopsis, genres, distribution, et où le regarder
   en France (streaming, location, achat).
 - **Recommandations** (`/decouvrir` et page d'accueil) qui combinent :

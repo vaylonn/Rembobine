@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRightIcon, StarIcon } from "@/components/icons";
+import { QuickActions, type QuickActionsKind } from "@/components/quick-actions";
 import { ScrollRow } from "@/components/scroll-row";
 import { MEDIA_LABELS, titleHref } from "@/lib/labels";
 import type { MediaType } from "@/lib/schema";
@@ -15,6 +16,8 @@ export type PosterCardProps = {
   voteAverage?: number;
   badge?: string;
   note?: string;
+  /** Bouton d'ajout rapide sur l'affiche ; « reco » permet aussi de masquer le titre. */
+  actions?: QuickActionsKind;
 };
 
 function Meta({ mediaType, year, voteAverage }: Pick<PosterCardProps, "mediaType" | "year" | "voteAverage">) {
@@ -34,7 +37,17 @@ function Meta({ mediaType, year, voteAverage }: Pick<PosterCardProps, "mediaType
   );
 }
 
-export function PosterCard({ id, mediaType, title, posterPath, year, voteAverage, badge, note }: PosterCardProps) {
+export function PosterCard({ actions, ...props }: PosterCardProps) {
+  const card = <PosterLink {...props} />;
+  if (!actions) return card;
+  return (
+    <QuickActions kind={actions} mediaType={props.mediaType} id={props.id} title={props.title}>
+      {card}
+    </QuickActions>
+  );
+}
+
+function PosterLink({ id, mediaType, title, posterPath, year, voteAverage, badge, note }: Omit<PosterCardProps, "actions">) {
   const src = imageUrl(posterPath);
   return (
     <Link href={titleHref({ mediaType, id })} className="group block outline-none">

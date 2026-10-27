@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { trackTitle, untrackTitle } from "@/app/actions";
+import { trackTitle, untrackTitle, type HistoryState } from "@/app/actions";
+import { EpisodeTracker, MovieHistory } from "@/components/history-panel";
 import { STATUS_LABELS } from "@/lib/labels";
 import { STATUSES, type MediaType, type Status } from "@/lib/schema";
 
@@ -10,10 +11,12 @@ type Props = {
   tmdbId: number;
   initial: { status: Status; rating: number | null; season: number | null; episode: number | null } | null;
   seasons: { season_number: number; episode_count: number }[];
+  history: HistoryState;
 };
 
-export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
+export function TrackPanel({ mediaType, tmdbId, initial, seasons, history: initialHistory }: Props) {
   const [state, setState] = useState(initial);
+  const [history, setHistory] = useState(initialHistory);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -31,9 +34,18 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
     });
   };
 
+  // L'historique fait foi pour la progression d'une série.
+  const updateHistory = (next: HistoryState) => {
+    setHistory(next);
+    setState((s) =>
+      s ? { ...s, season: next.season, episode: next.episode } : { status: "watching", rating: null, season: next.season, episode: next.episode },
+    );
+  };
+
   const remove = () => {
     const previous = state;
     setState(null);
+    setHistory({ viewings: [], season: null, episode: null });
     startTransition(async () => {
       try {
         await untrackTitle(mediaType, tmdbId);
@@ -45,7 +57,6 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
   };
 
   const current = state ?? { status: "planned" as Status, rating: null, season: null, episode: null };
-  const maxEpisodes = seasons.find((s) => s.season_number === current.season)?.episode_count;
 
   return (
     <div className="max-w-3xl space-y-4 rounded-2xl border border-white/10 bg-surface/70 p-4 backdrop-blur-xl sm:p-5">
@@ -98,62 +109,17 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
           </div>
 
           {mediaType === "tv" && seasons.length > 0 && (
-            <div className="flex flex-wrap items-end gap-3">
-              <label className="text-sm">
-                <span className="mb-1 block text-muted">Saison</span>
-                <select
-                  className="input w-28"
-                  value={state.season ?? ""}
-                  disabled={pending}
-                  onChange={(e) =>
-                    save({ ...state, season: e.target.value ? Number(e.target.value) : null, episode: 0 })
-                  }
-                >
-                  <option value="">–</option>
-                  {seasons.map((s) => (
-                    <option key={s.season_number} value={s.season_number}>
-                      {s.season_number}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block text-muted">Dernier épisode vu</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={maxEpisodes}
-                  className="input w-28"
-                  disabled={pending || !state.season}
-                  key={`${state.season}-${state.episode}`}
-                  defaultValue={state.episode ?? 0}
-                  onBlur={(e) => {
-                    const value = Number(e.target.value);
-                    if (value !== state.episode) save({ ...state, episode: value });
-                  }}
-                />
-              </label>
-              {state.season && (
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  disabled={pending}
-                  onClick={() => {
-                    const ep = (state.episode ?? 0) + 1;
-                    if (maxEpisodes && ep > maxEpisodes) {
-                      const hasNext = seasons.some((s) => s.season_number === (state.season ?? 0) + 1);
-                      if (hasNext) save({ ...state, season: (state.season ?? 0) + 1, episode: 1 });
-                      else save({ ...state, status: "watched" });
-                    } else {
-                      save({ ...state, episode: ep });
-                    }
-                  }}
-                >
-                  +1 épisode
-                </button>
-              )}
-              {maxEpisodes && <span className="pb-2 text-xs text-muted">sur {maxEpisodes}</span>}
-            </div>
+            <EpisodeTracker
+              tmdbId={tmdbId}
+              seasons={seasons}
+              history={history}
+              onChange={updateHistory}
+              onFinished={() => save({ ...state, status: "watched" })}
+            />
+          )}
+
+          {mediaType === "movie" && state.status === "watched" && (
+            <MovieHistory tmdbId={tmdbId} history={history} onChange={updateHistory} />
           )}
 
           <button type="button" onClick={remove} disabled={pending} className="text-xs text-muted hover:text-red-400">

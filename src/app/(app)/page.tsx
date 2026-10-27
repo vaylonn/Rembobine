@@ -48,12 +48,17 @@ export default async function HomePage() {
         }))}
         empty="Rien en cours. Cherche une série et marque-la « En cours » pour suivre ta progression."
       />
-      <RankedShelf title="Top 10 du jour" href="/decouvrir" items={trending.slice(0, 10)} />
+      <RankedShelf
+        title="Top 10 du jour"
+        href="/decouvrir"
+        items={trending.slice(0, 10).map((t) => ({ ...t, actions: owned.has(`${t.mediaType}:${t.id}`) ? undefined : "add" }))}
+      />
       <Shelf
         title={recos.personalized ? "Recommandé pour toi" : "Pour commencer"}
         href="/decouvrir"
         items={recos.items.slice(0, 20).map((r) => ({
           ...r,
+          actions: "reco",
           note: r.because.length ? `Car tu as aimé ${r.because[0]}` : undefined,
         }))}
         empty="Ajoute quelques titres vus pour obtenir des recommandations."

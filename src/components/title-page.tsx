@@ -5,6 +5,7 @@ import { Shelf } from "@/components/poster-card";
 import { ScrollRow } from "@/components/scroll-row";
 import { TrackPanel } from "@/components/track-panel";
 import { MEDIA_LABELS } from "@/lib/labels";
+import { listViewings } from "@/lib/history";
 import { getEntry, listEntries } from "@/lib/library";
 import type { MediaType } from "@/lib/schema";
 import { getDetails, getRecommendationsFor, imageUrl, type Provider } from "@/lib/tmdb";
@@ -35,11 +36,12 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
   const id = Number(rawId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const [details, entry, similar, library] = await Promise.all([
+  const [details, entry, similar, library, viewings] = await Promise.all([
     getDetails(mediaType, id),
     getEntry(mediaType, id),
     getRecommendationsFor(mediaType, id).catch(() => []),
     listEntries(),
+    listViewings({ mediaType, tmdbId: id }),
   ]);
   if (!details) notFound();
 
@@ -57,7 +59,7 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
 
   return (
     <>
-      <section className="full-bleed relative -mt-24 overflow-hidden">
+      <section className="full-bleed relative -mt-[calc(6rem+env(safe-area-inset-top))] overflow-hidden">
         {backdrop && (
           <Image
             src={backdrop}
@@ -105,6 +107,11 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
               mediaType={mediaType}
               tmdbId={id}
               seasons={details.seasons}
+              history={{
+                viewings: viewings.map(({ id, season, episode, watchedOn }) => ({ id, season, episode, watchedOn })),
+                season: entry?.season ?? null,
+                episode: entry?.episode ?? null,
+              }}
               initial={
                 entry
                   ? { status: entry.status, rating: entry.rating, season: entry.season, episode: entry.episode }
@@ -148,7 +155,10 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
 
       <Shelf
         title="Dans le même esprit"
-        items={similar.filter((t) => !owned.has(`${t.mediaType}:${t.id}`)).slice(0, 20)}
+        items={similar
+          .filter((t) => !owned.has(`${t.mediaType}:${t.id}`))
+          .slice(0, 20)
+          .map((t) => ({ ...t, actions: "add" as const }))}
         empty="Pas de suggestion pour ce titre."
       />
     </>

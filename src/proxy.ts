@@ -12,5 +12,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!connexion|_next/static|_next/image|favicon.ico).*)"],
+  // Les fichiers de la PWA (manifeste, icônes) doivent rester lisibles sans être connecté.
+  matcher: ["/((?!connexion|_next/static|_next/image|manifest.webmanifest|icon.svg|apple-icon.png|icons/).*)"],
 };

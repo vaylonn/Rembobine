@@ -1,5 +1,6 @@
 import { SearchIcon } from "@/components/icons";
 import { PosterGrid } from "@/components/poster-card";
+import { listEntries } from "@/lib/library";
 import { searchTitles } from "@/lib/tmdb";
 
 export const metadata = { title: "Recherche · Rembobine" };
@@ -7,7 +8,8 @@ export const metadata = { title: "Recherche · Rembobine" };
 export default async function SearchPage({ searchParams }: PageProps<"/recherche">) {
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.trim() : "";
-  const results = query ? await searchTitles(query) : [];
+  const [results, library] = await Promise.all([query ? searchTitles(query) : [], listEntries()]);
+  const owned = new Set(library.map((e) => `${e.mediaType}:${e.tmdbId}`));
 
   return (
     <section className="space-y-6">
@@ -33,7 +35,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/recherche
             : `Aucun résultat pour « ${query} ».`}
         </p>
       )}
-      <PosterGrid items={results} />
+      <PosterGrid
+        items={results.map((t) => ({ ...t, actions: owned.has(`${t.mediaType}:${t.id}`) ? undefined : ("add" as const) }))}
+      />
     </section>
   );
 }

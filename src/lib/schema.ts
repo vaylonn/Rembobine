@@ -1,7 +1,9 @@
 import {
+  date,
   index,
   integer,
   pgTable,
+  primaryKey,
   serial,
   smallint,
   text,
@@ -55,4 +57,37 @@ export const loginFailures = pgTable(
       .defaultNow(),
   },
   (t) => [index("login_failures_ip_created").on(t.ip, t.createdAt)],
+);
+
+// Chaque visionnage : un film (revisionnages compris) ou un épisode de série.
+// `watchedOn` est vide quand la date est inconnue (historique repris d'avant).
+export const viewings = pgTable(
+  "viewings",
+  {
+    id: serial("id").primaryKey(),
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: text("media_type").$type<MediaType>().notNull(),
+    season: smallint("season"),
+    episode: smallint("episode"),
+    watchedOn: date("watched_on", { mode: "string" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("viewings_title").on(t.mediaType, t.tmdbId)],
+);
+
+export type Viewing = typeof viewings.$inferSelect;
+
+// Recommandations masquées (« Pas intéressé »).
+export const dismissals = pgTable(
+  "dismissals",
+  {
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: text("media_type").$type<MediaType>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.mediaType, t.tmdbId] })],
 );
