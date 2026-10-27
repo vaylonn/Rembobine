@@ -9,7 +9,7 @@ import { ListPicker } from "@/components/list-controls";
 import { TrackPanel } from "@/components/track-panel";
 import { MEDIA_LABELS } from "@/lib/labels";
 import { listViewings } from "@/lib/history";
-import { houseflixUrl } from "@/lib/houseflix";
+import { houseflixDemo, houseflixUrl } from "@/lib/houseflix";
 import { getEntry, listEntries } from "@/lib/library";
 import { listLists, listsContaining } from "@/lib/lists";
 import type { MediaType } from "@/lib/schema";
@@ -139,7 +139,9 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
                   : null
               }
             />
-            {houseflixUrl() && <HouseflixPanel mediaType={mediaType} tmdbId={id} tvdbId={details.tvdbId} />}
+            {(houseflixUrl() || houseflixDemo()) && (
+              <HouseflixPanel mediaType={mediaType} tmdbId={id} tvdbId={details.tvdbId} demo={houseflixDemo()} />
+            )}
             <ListPicker
               mediaType={mediaType}
               tmdbId={id}

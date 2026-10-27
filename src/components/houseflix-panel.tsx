@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { houseflixAccess, houseflixStreamToken } from "@/app/actions";
 import { PlayIcon } from "@/components/icons";
+import { DEMO_POLL, demoCall, demoStreamUrl } from "@/lib/houseflix-demo";
 import type { MediaType } from "@/lib/schema";
 
 type JellyfinItem = { id: string; url: string | null };
@@ -22,7 +23,9 @@ type Access = { url: string; token: string; at: number };
 
 const POLL = 10_000;
 
-export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: MediaType; tmdbId: number; tvdbId: number | null }) {
+type Props = { mediaType: MediaType; tmdbId: number; tvdbId: number | null; demo?: boolean };
+
+export function HouseflixPanel({ mediaType, tmdbId, tvdbId, demo = false }: Props) {
   const access = useRef<Access | null>(null);
   const [status, setStatus] = useState<Status | null>(null);
   const [unreachable, setUnreachable] = useState(false);
@@ -33,6 +36,7 @@ export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: Media
 
   // Le jeton dure 15 minutes : on le renouvelle avant.
   const call = useCallback(async (path: string, init?: RequestInit) => {
+    if (demo) return demoCall(path, init);
     if (!access.current || access.current.at < Date.now() - 10 * 60_000) {
       const fresh = await houseflixAccess();
       if (!fresh) throw new Error("HouseFlix n'est pas configuré.");
@@ -45,7 +49,7 @@ export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: Media
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
     return data;
-  }, []);
+  }, [demo]);
 
   const query = mediaType === "movie" ? `type=movie&tmdbId=${tmdbId}` : `type=tv&tmdbId=${tmdbId}&tvdbId=${tvdbId}`;
 
@@ -69,9 +73,9 @@ export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: Media
   const busy = status?.state === "downloading" || status?.state === "importing" || status?.state === "wanted";
   useEffect(() => {
     if (!busy) return;
-    const timer = setInterval(refresh, POLL);
+    const timer = setInterval(refresh, demo ? DEMO_POLL : POLL);
     return () => clearInterval(timer);
-  }, [busy, refresh]);
+  }, [busy, refresh, demo]);
 
   if (mediaType === "tv" && !tvdbId) return null;
 
@@ -95,6 +99,7 @@ export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: Media
 
   const play = async (item: JellyfinItem) => {
     setPlayError(false);
+    if (demo) return setPlayer(demoStreamUrl());
     const token = await houseflixStreamToken(item.id);
     setPlayer(`${access.current!.url}/stream/${item.id}?t=${encodeURIComponent(token)}`);
   };
@@ -105,7 +110,9 @@ export function HouseflixPanel({ mediaType, tmdbId, tvdbId }: { mediaType: Media
 
   return (
     <div className="max-w-3xl space-y-3 rounded-2xl border border-white/10 bg-surface/70 p-4 backdrop-blur-xl sm:p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted">HouseFlix</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+        HouseFlix{demo && <span className="ml-2 normal-case tracking-normal text-accent">démo, fausses données</span>}
+      </p>
 
       <div className="flex flex-wrap items-center gap-2">
         {mediaType === "movie" && jellyfin && (

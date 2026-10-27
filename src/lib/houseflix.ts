@@ -10,6 +10,16 @@ export function houseflixUrl() {
   return url && process.env.HOUSEFLIX_SECRET ? url : null;
 }
 
+/**
+ * Mode démo : faux proxy dans le navigateur, pour voir l'encart sans Pi.
+ * Actif avec HOUSEFLIX_DEMO=1, ou d'office sur les prévisualisations Vercel tant
+ * que HouseFlix n'est pas configuré.
+ */
+export function houseflixDemo() {
+  if (houseflixUrl()) return false;
+  return process.env.HOUSEFLIX_DEMO === "1" || process.env.VERCEL_ENV === "preview";
+}
+
 function secret() {
   const value = process.env.HOUSEFLIX_SECRET;
   if (!value || value.length < 32) {
