@@ -3,6 +3,7 @@ import { logout } from "@/app/connexion/actions";
 
 const LINKS = [
   { href: "/", label: "Accueil" },
+  { href: "/a-suivre", label: "À suivre" },
   { href: "/decouvrir", label: "Découvrir" },
   { href: "/bibliotheque", label: "Bibliothèque" },
 ];

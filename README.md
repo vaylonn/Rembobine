@@ -19,8 +19,13 @@ Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
 
   Les titres déjà dans ta bibliothèque sont exclus. La logique est dans
   `src/lib/scoring.ts`.
-- **Bibliothèque** filtrable par type et statut, avec quelques statistiques.
-- Accès protégé par un **mot de passe unique**.
+- **À suivre** (`/a-suivre`) : les épisodes sortis que tu n'as pas encore vus
+  pour tes séries en cours, les prochaines sorties, et les séries terminées qui
+  ont repris.
+- **Bibliothèque** filtrable par type et statut, avec recherche, tri, pagination
+  et quelques statistiques.
+- Accès protégé par un **mot de passe unique**, avec blocage temporaire après
+  5 essais ratés depuis une même adresse (30 au total) en 15 minutes.
 
 ## Stack
 
