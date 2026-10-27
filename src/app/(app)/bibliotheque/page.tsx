@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PosterGrid } from "@/components/poster-card";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, PosterGrid } from "@/components/poster-card";
 import { MEDIA_LABELS, STATUS_LABELS } from "@/lib/labels";
 import { listEntries } from "@/lib/library";
 import { MEDIA_TYPES, STATUSES, type MediaType, type Status } from "@/lib/schema";
@@ -14,8 +15,8 @@ function Filter({ label, active, href }: { label: string; active: boolean; href:
   return (
     <Link
       href={href}
-      className={`rounded-full border px-3 py-1 text-sm ${
-        active ? "border-accent bg-accent text-accent-fg" : "border-border text-muted hover:text-fg"
+      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+        active ? "bg-fg text-bg" : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg"
       }`}
     >
       {label}
@@ -45,30 +46,27 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-bold">Bibliothèque</h1>
-        <dl className="flex gap-6 text-sm">
-          <div>
-            <dt className="text-muted">Films vus</dt>
-            <dd className="text-lg font-semibold">{watched.filter((e) => e.mediaType === "movie").length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Séries vues</dt>
-            <dd className="text-lg font-semibold">{watched.filter((e) => e.mediaType === "tv").length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Note moyenne</dt>
-            <dd className="text-lg font-semibold">{avg ? avg.toFixed(1) : "–"}</dd>
-          </div>
+      <PageHeader title="Bibliothèque">
+        <dl className="grid grid-cols-3 gap-3 text-sm">
+          {[
+            { label: "Films vus", value: watched.filter((e) => e.mediaType === "movie").length },
+            { label: "Séries vues", value: watched.filter((e) => e.mediaType === "tv").length },
+            { label: "Note moyenne", value: avg ? avg.toFixed(1) : "–" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-white/5 bg-surface px-4 py-3">
+              <dt className="text-xs text-muted">{stat.label}</dt>
+              <dd className="font-display text-2xl font-bold">{stat.value}</dd>
+            </div>
+          ))}
         </dl>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-wrap gap-2">
         <Filter label="Tout" active={!type} href={href({ statut: status })} />
         {MEDIA_TYPES.map((t) => (
           <Filter key={t} label={`${MEDIA_LABELS[t]}s`} active={type === t} href={href({ type: t, statut: status })} />
         ))}
-        <span className="mx-1 w-px bg-border" />
+        <span className="mx-1 w-px self-stretch bg-border" />
         <Filter label="Tous statuts" active={!status} href={href({ type })} />
         {STATUSES.map((s) => (
           <Filter key={s} label={STATUS_LABELS[s]} active={status === s} href={href({ type, statut: s })} />
@@ -76,9 +74,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted">
-          Rien ici pour l&apos;instant. Utilise la recherche pour ajouter des titres.
-        </p>
+        <EmptyState>Rien ici pour l&apos;instant. Utilise la recherche pour ajouter des titres.</EmptyState>
       ) : (
         <PosterGrid
           items={items.map((e) => ({

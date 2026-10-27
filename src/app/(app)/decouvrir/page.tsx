@@ -1,4 +1,5 @@
-import { PosterGrid } from "@/components/poster-card";
+import { PageHeader } from "@/components/page-header";
+import { PosterGrid, RankedShelf } from "@/components/poster-card";
 import { getPersonalRecommendations } from "@/lib/recommendations";
 import { getTrending } from "@/lib/tmdb";
 
@@ -13,17 +14,15 @@ export default async function DiscoverPage() {
 
   return (
     <>
-      <section className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {recos.personalized ? "Recommandé pour toi" : "Pour commencer"}
-          </h1>
-          <p className="text-sm text-muted">
-            {recos.personalized
+      <section className="space-y-6">
+        <PageHeader
+          title={recos.personalized ? "Recommandé pour toi" : "Pour commencer"}
+          subtitle={
+            recos.personalized
               ? "Calculé à partir de tes notes, de tes genres préférés et des tendances de la semaine."
-              : "Marque quelques titres comme vus (et note-les) pour personnaliser cette page."}
-          </p>
-        </div>
+              : "Marque quelques titres comme vus (et note-les) pour personnaliser cette page."
+          }
+        />
         <PosterGrid
           items={recos.items.slice(0, 36).map((r) => ({
             ...r,
@@ -34,14 +33,8 @@ export default async function DiscoverPage() {
           }))}
         />
       </section>
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Films tendance cette semaine</h2>
-        <PosterGrid items={movies.slice(0, 12)} />
-      </section>
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Séries tendance cette semaine</h2>
-        <PosterGrid items={shows.slice(0, 12)} />
-      </section>
+      <RankedShelf title="Top 10 des films cette semaine" items={movies.slice(0, 10)} />
+      <RankedShelf title="Top 10 des séries cette semaine" items={shows.slice(0, 10)} />
     </>
   );
 }
