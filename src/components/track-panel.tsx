@@ -48,7 +48,7 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
   const maxEpisodes = seasons.find((s) => s.season_number === current.season)?.episode_count;
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
+    <div className="max-w-3xl space-y-4 rounded-2xl border border-white/10 bg-surface/70 p-4 backdrop-blur-xl sm:p-5">
       <div className="flex flex-wrap gap-2">
         {STATUSES.map((s) => (
           <button
@@ -62,10 +62,10 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
                 season: mediaType === "tv" && s === "watching" && !current.season ? 1 : current.season,
               })
             }
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
               state?.status === s
-                ? "bg-accent text-accent-fg"
-                : "border border-border text-fg hover:bg-surface-2"
+                ? "bg-accent text-accent-fg shadow-[0_6px_20px_-8px_rgba(245,176,65,0.6)]"
+                : "bg-white/10 text-fg hover:bg-white/20"
             }`}
           >
             {STATUS_LABELS[s]}
@@ -76,7 +76,7 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
       {state && (
         <>
           <div>
-            <p className="mb-2 text-sm text-muted">Ta note</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ta note</p>
             <div className="flex flex-wrap gap-1">
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                 <button
@@ -84,10 +84,10 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons }: Props) {
                   type="button"
                   disabled={pending}
                   onClick={() => save({ ...state, rating: state.rating === n ? null : n })}
-                  className={`h-8 w-8 rounded-md text-sm font-semibold transition ${
+                  className={`h-8 w-8 rounded-full text-sm font-semibold transition ${
                     state.rating !== null && n <= state.rating
                       ? "bg-accent text-accent-fg"
-                      : "bg-surface-2 text-muted hover:text-fg"
+                      : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg"
                   }`}
                   aria-label={`Noter ${n} sur 10`}
                 >

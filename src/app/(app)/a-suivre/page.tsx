@@ -1,4 +1,5 @@
-import { PosterGrid } from "@/components/poster-card";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, PosterGrid } from "@/components/poster-card";
 import { getUpNext, type UpNextItem } from "@/lib/up-next";
 
 export const metadata = { title: "À suivre · Rembobine" };
@@ -30,9 +31,9 @@ function card(item: UpNextItem, note: string) {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="text-xl font-semibold">{title}</h2>
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="section-title">{title}</h2>
         {hint && <p className="text-sm text-muted">{hint}</p>}
       </div>
       {children}
@@ -45,13 +46,13 @@ export default async function UpNextPage() {
   const empty = !behind.length && !upcoming.length && !upToDate.length;
 
   return (
-    <div className="space-y-10">
-      <h1 className="text-2xl font-bold">À suivre</h1>
+    <div className="space-y-12">
+      <PageHeader title="À suivre" subtitle="Tes séries en cours : ce qu'il reste à rattraper et ce qui arrive bientôt." />
 
       {empty && (
-        <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted">
+        <EmptyState>
           Aucune série en cours. Marque une série « En cours » et indique ton dernier épisode vu pour la retrouver ici.
-        </p>
+        </EmptyState>
       )}
 
       {behind.length > 0 && (

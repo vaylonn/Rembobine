@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { PosterGrid } from "@/components/poster-card";
+import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "@/components/icons";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState, PosterGrid } from "@/components/poster-card";
 import { MEDIA_LABELS, STATUS_LABELS } from "@/lib/labels";
 import { listEntries } from "@/lib/library";
 import { MEDIA_TYPES, STATUSES, type Entry, type MediaType, type Status } from "@/lib/schema";
@@ -31,8 +33,8 @@ function Filter({ label, active, href }: { label: string; active: boolean; href:
   return (
     <Link
       href={href}
-      className={`rounded-full border px-3 py-1 text-sm ${
-        active ? "border-accent bg-accent text-accent-fg" : "border-border text-muted hover:text-fg"
+      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+        active ? "bg-fg text-bg" : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg"
       }`}
     >
       {label}
@@ -83,30 +85,27 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-bold">Bibliothèque</h1>
-        <dl className="flex gap-6 text-sm">
-          <div>
-            <dt className="text-muted">Films vus</dt>
-            <dd className="text-lg font-semibold">{watched.filter((e) => e.mediaType === "movie").length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Séries vues</dt>
-            <dd className="text-lg font-semibold">{watched.filter((e) => e.mediaType === "tv").length}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Note moyenne</dt>
-            <dd className="text-lg font-semibold">{avg ? avg.toFixed(1) : "–"}</dd>
-          </div>
+      <PageHeader title="Bibliothèque">
+        <dl className="grid grid-cols-3 gap-3 text-sm">
+          {[
+            { label: "Films vus", value: watched.filter((e) => e.mediaType === "movie").length },
+            { label: "Séries vues", value: watched.filter((e) => e.mediaType === "tv").length },
+            { label: "Note moyenne", value: avg ? avg.toFixed(1) : "–" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-white/5 bg-surface px-4 py-3">
+              <dt className="text-xs text-muted">{stat.label}</dt>
+              <dd className="font-display text-2xl font-bold">{stat.value}</dd>
+            </div>
+          ))}
         </dl>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-wrap gap-2">
         <Filter label="Tout" active={!type} href={href({ type: undefined })} />
         {MEDIA_TYPES.map((t) => (
           <Filter key={t} label={`${MEDIA_LABELS[t]}s`} active={type === t} href={href({ type: t })} />
         ))}
-        <span className="mx-1 w-px bg-border" />
+        <span className="mx-1 w-px self-stretch bg-border" />
         <Filter label="Tous statuts" active={!status} href={href({ statut: undefined })} />
         {STATUSES.map((s) => (
           <Filter key={s} label={STATUS_LABELS[s]} active={status === s} href={href({ statut: s })} />
@@ -114,16 +113,17 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <form action="/bibliotheque" className="w-full sm:w-64">
+        <form action="/bibliotheque" className="relative w-full sm:w-72">
           {type && <input type="hidden" name="type" value={type} />}
           {status && <input type="hidden" name="statut" value={status} />}
           {sort !== "recent" && <input type="hidden" name="tri" value={sort} />}
+          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-muted" width={16} height={16} />
           <input
             name="q"
             type="search"
             defaultValue={q}
             placeholder="Chercher dans ma bibliothèque…"
-            className="input py-1.5 text-sm"
+            className="input py-1.5 pl-10 text-sm"
           />
         </form>
         <span className="text-sm text-muted sm:ml-2">Trier :</span>
@@ -133,11 +133,11 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted">
+        <EmptyState>
           {q
             ? `Aucun titre ne correspond à « ${q} ».`
             : "Rien ici pour l'instant. Utilise la recherche pour ajouter des titres."}
-        </p>
+        </EmptyState>
       ) : (
         <PosterGrid
           items={shown.map((e) => ({
@@ -156,23 +156,31 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
       )}
 
       {pageCount > 1 && (
-        <nav className="flex items-center justify-center gap-4 text-sm">
+        <nav className="flex items-center justify-center gap-3 text-sm">
           {page > 1 ? (
-            <Link href={href({ page: page - 1 })} className="text-muted hover:text-fg">
-              ← Précédent
+            <Link href={href({ page: page - 1 })} className="btn-ghost">
+              <ChevronLeftIcon width={16} height={16} />
+              Précédent
             </Link>
           ) : (
-            <span className="text-muted opacity-40">← Précédent</span>
+            <span className="btn-ghost pointer-events-none opacity-40">
+              <ChevronLeftIcon width={16} height={16} />
+              Précédent
+            </span>
           )}
-          <span>
+          <span className="px-2 text-muted">
             Page {page} sur {pageCount} · {items.length} titres
           </span>
           {page < pageCount ? (
-            <Link href={href({ page: page + 1 })} className="text-muted hover:text-fg">
-              Suivant →
+            <Link href={href({ page: page + 1 })} className="btn-ghost">
+              Suivant
+              <ChevronRightIcon width={16} height={16} />
             </Link>
           ) : (
-            <span className="text-muted opacity-40">Suivant →</span>
+            <span className="btn-ghost pointer-events-none opacity-40">
+              Suivant
+              <ChevronRightIcon width={16} height={16} />
+            </span>
           )}
         </nav>
       )}
