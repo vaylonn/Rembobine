@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   pgTable,
   serial,
@@ -42,3 +43,16 @@ export const entries = pgTable(
 );
 
 export type Entry = typeof entries.$inferSelect;
+
+// Échecs de connexion récents, pour freiner les essais de mot de passe en boucle.
+export const loginFailures = pgTable(
+  "login_failures",
+  {
+    id: serial("id").primaryKey(),
+    ip: text("ip").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("login_failures_ip_created").on(t.ip, t.createdAt)],
+);
