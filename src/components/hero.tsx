@@ -80,7 +80,7 @@ export function Hero({ slides, label }: { slides: HeroSlide[]; label: string }) 
 
   return (
     <section
-      className="full-bleed relative -mt-24 h-[78vh] min-h-[460px] max-h-[820px] overflow-hidden"
+      className="full-bleed relative -mt-[calc(6rem+env(safe-area-inset-top))] h-[78vh] min-h-[460px] max-h-[820px] overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carrousel"

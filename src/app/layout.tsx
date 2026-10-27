@@ -8,10 +8,15 @@ const outfit = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Rembobine",
   description: "Suivi de films et séries, avec des recommandations à ton goût.",
+  applicationName: "Rembobine",
+  // Plein écran une fois ajoutée à l'écran d'accueil sur iPhone.
+  appleWebApp: { capable: true, title: "Rembobine", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#060608",
+  // Laisse la page passer sous la barre d'état (encoche) en mode app installée.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

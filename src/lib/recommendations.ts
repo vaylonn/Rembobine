@@ -1,4 +1,5 @@
 import "server-only";
+import { listDismissed } from "./dismissals";
 import { listEntries } from "./library";
 import { key, pickSeeds, score, type Recommendation } from "./scoring";
 import { getRecommendationsFor, getTrending } from "./tmdb";
@@ -9,6 +10,13 @@ export async function getPersonalRecommendations(): Promise<{
   items: Recommendation[];
   personalized: boolean;
 }> {
+  const [result, dismissed] = await Promise.all([computeRecommendations(), listDismissed()]);
+  // Les titres marqués « Pas intéressé » ne reviennent plus.
+  const hidden = new Set(dismissed.map((d) => key({ mediaType: d.mediaType, id: d.tmdbId })));
+  return { ...result, items: result.items.filter((r) => !hidden.has(key(r))) };
+}
+
+async function computeRecommendations() {
   const [library, trending] = await Promise.all([listEntries(), getTrending("all", "week")]);
   const seeds = pickSeeds(library, SEED_COUNT);
 

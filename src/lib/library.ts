@@ -40,6 +40,17 @@ export async function getEntry(mediaType: MediaType, tmdbId: number): Promise<En
   return rows[0];
 }
 
+/** Ajoute le titre s'il n'est pas déjà dans la bibliothèque. Vrai s'il a été ajouté. */
+export async function addEntryIfMissing(input: EntryInput) {
+  const now = new Date();
+  const rows = await db()
+    .insert(entries)
+    .values({ ...input, watchedAt: input.status === "watched" ? now : null, updatedAt: now })
+    .onConflictDoNothing()
+    .returning({ id: entries.id });
+  return rows.length > 0;
+}
+
 export async function saveEntry(input: EntryInput) {
   const now = new Date();
   // La date de visionnage est fixée la première fois qu'on passe en « vu ».
