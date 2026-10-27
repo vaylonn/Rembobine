@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { logout } from "@/app/connexion/actions";
-import { CompassIcon, HomeIcon, LibraryIcon, LogoutIcon, SearchIcon } from "./icons";
+import { CompassIcon, HomeIcon, LibraryIcon, LogoutIcon, PlayIcon, SearchIcon } from "./icons";
 
 const LINKS = [
   { href: "/", label: "Accueil", icon: HomeIcon },
+  { href: "/a-suivre", label: "À suivre", icon: PlayIcon },
   { href: "/decouvrir", label: "Découvrir", icon: CompassIcon },
   { href: "/bibliotheque", label: "Bibliothèque", icon: LibraryIcon },
 ];
@@ -103,15 +104,15 @@ export function Header() {
 
       {/* Barre d'onglets en bas de l'écran sur mobile. */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/5 bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden">
-        <div className="grid grid-cols-4">
-          {[...LINKS.slice(0, 2), { href: "/recherche", label: "Recherche", icon: SearchIcon }, LINKS[2]].map((l) => {
+        <div className="grid grid-cols-5">
+          {[...LINKS.slice(0, 3), { href: "/recherche", label: "Recherche", icon: SearchIcon }, LINKS[3]].map((l) => {
             const active = isActive(pathname, l.href);
             const Icon = l.icon;
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
+                className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >

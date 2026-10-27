@@ -173,3 +173,45 @@ export async function getDetails(type: MediaType, id: number): Promise<TitleDeta
     },
   };
 }
+
+type RawEpisode = { season_number: number; episode_number: number; air_date: string | null; name?: string };
+
+export type Episode = { season: number; episode: number; airDate: string | null; name: string };
+
+export type EpisodeStatus = {
+  seasons: { season_number: number; episode_count: number }[];
+  lastAired: Episode | null;
+  next: Episode | null;
+  ended: boolean;
+};
+
+function episode(raw: RawEpisode | null | undefined): Episode | null {
+  if (!raw) return null;
+  return {
+    season: raw.season_number,
+    episode: raw.episode_number,
+    airDate: raw.air_date || null,
+    name: raw.name ?? "",
+  };
+}
+
+/** Dernier épisode diffusé et prochain annoncé, rafraîchis plus souvent que la fiche. */
+export async function getEpisodeStatus(id: number): Promise<EpisodeStatus | null> {
+  let raw: {
+    seasons?: { season_number: number; episode_count: number }[];
+    last_episode_to_air?: RawEpisode | null;
+    next_episode_to_air?: RawEpisode | null;
+    status?: string;
+  };
+  try {
+    raw = await tmdb(`/tv/${id}`, {}, 6 * HOUR);
+  } catch {
+    return null;
+  }
+  return {
+    seasons: (raw.seasons ?? []).filter((s) => s.season_number > 0),
+    lastAired: episode(raw.last_episode_to_air),
+    next: episode(raw.next_episode_to_air),
+    ended: raw.status === "Ended" || raw.status === "Canceled",
+  };
+}

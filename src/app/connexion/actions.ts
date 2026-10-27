@@ -3,6 +3,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { clearLoginFailures, clientIp, isLoginBlocked, recordLoginFailure } from "@/lib/login-limit";
 import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
@@ -24,8 +25,17 @@ export async function login(_prev: string | null, formData: FormData) {
   const expected = process.env.APP_PASSWORD;
   if (!expected) return "APP_PASSWORD n'est pas configuré sur le serveur.";
 
+  const ip = await clientIp();
+  if (await isLoginBlocked(ip)) {
+    return "Trop de tentatives. Réessaie dans un quart d'heure.";
+  }
+
   const password = String(formData.get("password") ?? "");
-  if (!sameSecret(password, expected)) return "Mot de passe incorrect.";
+  if (!sameSecret(password, expected)) {
+    await recordLoginFailure(ip);
+    return "Mot de passe incorrect.";
+  }
+  await clearLoginFailures(ip);
 
   (await cookies()).set(SESSION_COOKIE, await createSessionToken(), {
     httpOnly: true,
