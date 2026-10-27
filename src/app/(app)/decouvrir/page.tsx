@@ -1,16 +1,19 @@
+import { Hero, type HeroSlide } from "@/components/hero";
 import { PageHeader } from "@/components/page-header";
 import { PosterGrid, RankedShelf, Shelf } from "@/components/poster-card";
+import { MEDIA_LABELS, titleHref } from "@/lib/labels";
 import { listEntries } from "@/lib/library";
 import { getPeopleRecommendations } from "@/lib/people-recos";
 import { getPersonalRecommendations } from "@/lib/recommendations";
 import type { Title } from "@/lib/tmdb";
-import { getTrending } from "@/lib/tmdb";
+import { getTrending, imageUrl } from "@/lib/tmdb";
 
 export const metadata = { title: "Découvrir · Rembobine" };
 
 export default async function DiscoverPage() {
-  const [recos, movies, shows, library, people] = await Promise.all([
+  const [recos, today, movies, shows, library, people] = await Promise.all([
     getPersonalRecommendations(),
+    getTrending("all", "day"),
     getTrending("movie", "week"),
     getTrending("tv", "week"),
     listEntries(),
@@ -20,8 +23,26 @@ export default async function DiscoverPage() {
   const withAdd = (items: Title[]) =>
     items.map((t) => ({ ...t, actions: owned.has(`${t.mediaType}:${t.id}`) ? undefined : ("add" as const) }));
 
+  const slides: HeroSlide[] = today
+    .map((t, i) => ({ t, rank: i + 1 }))
+    .filter(({ t }) => t.backdropPath)
+    .slice(0, 5)
+    .map(({ t, rank }) => ({
+      id: t.id,
+      mediaType: t.mediaType,
+      title: t.title,
+      href: titleHref(t),
+      backdrop: imageUrl(t.backdropPath, "w1280")!,
+      overview: t.overview,
+      facts: [t.year ? String(t.year) : null, MEDIA_LABELS[t.mediaType]].filter((f): f is string => !!f),
+      voteAverage: t.voteAverage,
+      rank,
+      inLibrary: owned.has(`${t.mediaType}:${t.id}`),
+    }));
+
   return (
     <>
+      <Hero slides={slides} label="des tendances du jour" />
       <section className="space-y-6">
         <PageHeader
           title={recos.personalized ? "Recommandé pour toi" : "Pour commencer"}

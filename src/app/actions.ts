@@ -115,12 +115,12 @@ export async function saveNotes(mediaType: MediaType, tmdbId: number, notes: str
 export async function quickAdd(
   mediaType: MediaType,
   tmdbId: number,
-  status: "planned" | "watched",
+  status: "planned" | "watching" | "watched",
   rating: number | null = null,
 ) {
   await requireSession();
   checkTitle(mediaType, tmdbId);
-  if (status !== "planned" && status !== "watched") throw new Error("Données invalides.");
+  if (status !== "planned" && status !== "watching" && status !== "watched") throw new Error("Données invalides.");
 
   const details = await detailsOrThrow(mediaType, tmdbId);
   const added = await addEntryIfMissing(

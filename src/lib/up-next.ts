@@ -13,6 +13,9 @@ export type UpNextItem = {
   upcoming: Episode | null;
   /** Série marquée « Vu » qui a eu de nouveaux épisodes depuis. */
   resumed: boolean;
+  /** Épisodes déjà diffusés, toutes saisons confondues. */
+  aired: number;
+  backdropPath: string | null;
 };
 
 /**
@@ -25,19 +28,22 @@ export function episodesBehind(
   status: Pick<EpisodeStatus, "seasons" | "lastAired">,
 ) {
   const last = status.lastAired;
-  if (!last) return { behind: 0, nextToWatch: null };
+  if (!last) return { behind: 0, nextToWatch: null, aired: 0 };
   let behind = 0;
+  let total = 0;
   let nextToWatch: UpNextItem["nextToWatch"] = null;
   for (const s of [...status.seasons].sort((a, b) => a.season_number - b.season_number)) {
-    if (s.season_number < progress.season || s.season_number > last.season) continue;
+    if (s.season_number > last.season) continue;
     const aired = s.season_number === last.season ? last.episode : s.episode_count;
+    total += aired;
+    if (s.season_number < progress.season) continue;
     const seen = s.season_number === progress.season ? progress.episode : 0;
     if (aired > seen) {
       behind += aired - seen;
       nextToWatch ??= { season: s.season_number, episode: seen + 1 };
     }
   }
-  return { behind, nextToWatch };
+  return { behind, nextToWatch, aired: total };
 }
 
 function airedAfter(episode: Episode | null, date: Date | null) {
@@ -65,7 +71,13 @@ export async function getUpNext() {
     let item: UpNextItem;
     if (entry.status === "watching") {
       const progress = { season: entry.season ?? 1, episode: entry.episode ?? 0 };
-      item = { entry, ...episodesBehind(progress, status), upcoming: status.next, resumed: false };
+      item = {
+        entry,
+        ...episodesBehind(progress, status),
+        upcoming: status.next,
+        resumed: false,
+        backdropPath: status.backdropPath,
+      };
     } else {
       // Série terminée : on ne signale que ce qui est sorti ou annoncé après la date de visionnage.
       const resumed = airedAfter(status.lastAired, entry.watchedAt ?? entry.updatedAt);
@@ -75,6 +87,8 @@ export async function getUpNext() {
         nextToWatch: resumed && status.lastAired ? { season: status.lastAired.season, episode: 1 } : null,
         upcoming: status.next,
         resumed,
+        aired: 0,
+        backdropPath: status.backdropPath,
       };
     }
 
@@ -85,6 +99,7 @@ export async function getUpNext() {
 
   const date = (i: UpNextItem) => i.upcoming?.airDate ?? "9999";
   upcoming.sort((a, b) => date(a).localeCompare(date(b)));
-  behind.sort((a, b) => b.behind - a.behind);
+  // Les séries que tu regardes en ce moment d'abord.
+  behind.sort((a, b) => +b.entry.updatedAt - +a.entry.updatedAt);
   return { behind, upcoming, upToDate };
 }
