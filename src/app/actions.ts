@@ -14,6 +14,7 @@ import {
   setViewingDate,
   syncEntry,
 } from "@/lib/history";
+import { apiToken, houseflixUrl, streamToken } from "@/lib/houseflix";
 import { addToList, createList, deleteList, removeFromList, renameList } from "@/lib/lists";
 import { addEntryIfMissing, deleteEntry, getEntry, saveEntry, setNotes, type EntryInput } from "@/lib/library";
 import { MEDIA_TYPES, STATUSES, type MediaType, type Status } from "@/lib/schema";
@@ -287,4 +288,17 @@ export async function toggleInList(listId: number, mediaType: MediaType, tmdbId:
   await requireSession();
   await setInList(listId, mediaType, tmdbId, inList);
   revalidatePath("/listes", "layout");
+}
+
+/** Adresse du proxy HouseFlix et jeton court pour l'appeler depuis le navigateur. */
+export async function houseflixAccess() {
+  await requireSession();
+  const url = houseflixUrl();
+  return url ? { url, token: await apiToken() } : null;
+}
+
+export async function houseflixStreamToken(itemId: string) {
+  await requireSession();
+  if (!/^[0-9a-f]{32}$/i.test(itemId)) throw new Error("Données invalides.");
+  return streamToken(itemId);
 }
