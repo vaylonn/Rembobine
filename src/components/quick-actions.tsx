@@ -98,12 +98,18 @@ export function QuickActions({ kind, mediaType, id, title, children }: Props) {
           {added ? <CheckIcon width={16} height={16} /> : <PlusIcon width={16} height={16} />}
         </button>
         {open && (
-          <div className="absolute right-0 top-10 w-40 overflow-hidden rounded-xl border border-white/10 bg-surface-2/95 py-1 shadow-2xl backdrop-blur-xl">
+          <div className="absolute right-0 top-10 w-48 overflow-hidden rounded-xl border border-white/10 bg-surface-2/95 py-1 shadow-2xl backdrop-blur-xl">
             <button type="button" className={item} onClick={() => act("planned", () => quickAdd(mediaType, id, "planned"))}>
               À voir
             </button>
+            <button type="button" className={item} onClick={() => act("watched", () => quickAdd(mediaType, id, "watched", 8))}>
+              👍 Vu, j&apos;ai aimé
+            </button>
+            <button type="button" className={item} onClick={() => act("watched", () => quickAdd(mediaType, id, "watched", 4))}>
+              👎 Vu, pas aimé
+            </button>
             <button type="button" className={item} onClick={() => act("watched", () => quickAdd(mediaType, id, "watched"))}>
-              Déjà vu
+              Déjà vu, sans note
             </button>
             {kind === "reco" && (
               <button

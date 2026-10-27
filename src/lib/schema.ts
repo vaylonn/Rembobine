@@ -4,6 +4,7 @@ import {
   integer,
   pgTable,
   primaryKey,
+  real,
   serial,
   smallint,
   text,
@@ -28,8 +29,12 @@ export const entries = pgTable(
     year: smallint("year"),
     genreIds: integer("genre_ids").array().notNull().default([]),
     status: text("status").$type<Status>().notNull(),
-    // Note sur 10, facultative.
-    rating: smallint("rating"),
+    // Note sur 10 au demi-point près, facultative.
+    rating: real("rating"),
+    // Ton avis ou tes notes perso sur le titre.
+    notes: text("notes"),
+    // Durée en minutes (d'un épisode pour une série), pour les statistiques.
+    runtime: smallint("runtime"),
     // Progression pour les séries.
     season: smallint("season"),
     episode: smallint("episode"),
@@ -90,4 +95,35 @@ export const dismissals = pgTable(
       .defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.mediaType, t.tmdbId] })],
+);
+
+// Listes perso (« À voir avec X », « Films de Noël »…).
+export const lists = pgTable("lists", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type List = typeof lists.$inferSelect;
+
+// Un titre peut être dans une liste sans être dans la bibliothèque :
+// on garde de quoi l'afficher.
+export const listItems = pgTable(
+  "list_items",
+  {
+    listId: integer("list_id")
+      .notNull()
+      .references(() => lists.id, { onDelete: "cascade" }),
+    tmdbId: integer("tmdb_id").notNull(),
+    mediaType: text("media_type").$type<MediaType>().notNull(),
+    title: text("title").notNull(),
+    posterPath: text("poster_path"),
+    year: smallint("year"),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.listId, t.mediaType, t.tmdbId] })],
 );

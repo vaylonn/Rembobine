@@ -15,6 +15,7 @@ export type EntryInput = {
   rating: number | null;
   season: number | null;
   episode: number | null;
+  runtime: number | null;
 };
 
 export async function listEntries(filter: { mediaType?: MediaType; status?: Status } = {}) {
@@ -69,6 +70,7 @@ export async function saveEntry(input: EntryInput) {
         rating: input.rating,
         season: input.season,
         episode: input.episode,
+        runtime: input.runtime,
         watchedAt:
           input.status === "watched"
             ? sql`coalesce(${entries.watchedAt}, ${now.toISOString()}::timestamptz)`
@@ -81,5 +83,20 @@ export async function saveEntry(input: EntryInput) {
 export async function deleteEntry(mediaType: MediaType, tmdbId: number) {
   await db()
     .delete(entries)
+    .where(and(eq(entries.mediaType, mediaType), eq(entries.tmdbId, tmdbId)));
+}
+
+export async function setNotes(mediaType: MediaType, tmdbId: number, notes: string | null) {
+  await db()
+    .update(entries)
+    .set({ notes, updatedAt: new Date() })
+    .where(and(eq(entries.mediaType, mediaType), eq(entries.tmdbId, tmdbId)));
+}
+
+/** Renseigne la durée des titres enregistrés avant qu'on la garde. */
+export async function setRuntime(mediaType: MediaType, tmdbId: number, runtime: number | null) {
+  await db()
+    .update(entries)
+    .set({ runtime })
     .where(and(eq(entries.mediaType, mediaType), eq(entries.tmdbId, tmdbId)));
 }

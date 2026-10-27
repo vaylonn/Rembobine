@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, PosterGrid } from "@/components/poster-card";
-import { MEDIA_LABELS, STATUS_LABELS } from "@/lib/labels";
+import { MEDIA_LABELS, STATUS_LABELS, formatRating } from "@/lib/labels";
 import { listEntries } from "@/lib/library";
 import { MEDIA_TYPES, STATUSES, type Entry, type MediaType, type Status } from "@/lib/schema";
 
@@ -90,7 +90,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
           {[
             { label: "Films vus", value: watched.filter((e) => e.mediaType === "movie").length },
             { label: "Séries vues", value: watched.filter((e) => e.mediaType === "tv").length },
-            { label: "Note moyenne", value: avg ? avg.toFixed(1) : "–" },
+            { label: "Note moyenne", value: avg ? formatRating(Math.round(avg * 10) / 10) : "–" },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl border border-white/5 bg-surface px-4 py-3">
               <dt className="text-xs text-muted">{stat.label}</dt>
@@ -99,6 +99,15 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
           ))}
         </dl>
       </PageHeader>
+
+      <div className="flex flex-wrap gap-2">
+        <Link href="/listes" className="btn-ghost py-1.5">
+          Mes listes
+        </Link>
+        <Link href="/stats" className="btn-ghost py-1.5">
+          Stats et bilan de l&apos;année
+        </Link>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <Filter label="Tout" active={!type} href={href({ type: undefined })} />
@@ -146,7 +155,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/biblioth
             title: e.title,
             posterPath: e.posterPath,
             year: e.year,
-            badge: e.rating ? `★ ${e.rating}` : undefined,
+            badge: e.rating ? `★ ${formatRating(e.rating)}` : undefined,
             note:
               e.mediaType === "tv" && e.status === "watching" && e.season
                 ? `En cours · S${e.season} É${e.episode ?? 0}`

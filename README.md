@@ -12,6 +12,14 @@ Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
   suivi épisode par épisode pour les séries (grille par saison, « +1 épisode »).
 - **Ajout rapide** depuis les affiches (À voir, Déjà vu), et « Pas intéressé »
   sur une recommandation pour qu'elle ne revienne plus.
+- **Notes au demi-point** (appuie deux fois sur une note) et **avis perso** sur
+  chaque titre.
+- **Listes perso** (`/listes`) : « À voir avec X », « Films de Noël »…
+- **Pages acteur et réalisateur** (`/personne/…`), et sur Découvrir des
+  rangées « Parce que tu aimes … » pour les personnes qui reviennent dans tes
+  titres préférés.
+- **Stats et bilan annuel** (`/stats`) : temps passé, films, épisodes, notes,
+  genres, mois par mois, et le meilleur de chaque année.
 - **Installable sur mobile** (PWA) : depuis le navigateur, « Ajouter à l'écran
   d'accueil » donne une icône et un affichage plein écran.
 - **Fiche** de chaque titre : synopsis, genres, distribution, et où le regarder

@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
-import { PosterGrid, RankedShelf } from "@/components/poster-card";
+import { PosterGrid, RankedShelf, Shelf } from "@/components/poster-card";
 import { listEntries } from "@/lib/library";
+import { getPeopleRecommendations } from "@/lib/people-recos";
 import { getPersonalRecommendations } from "@/lib/recommendations";
 import type { Title } from "@/lib/tmdb";
 import { getTrending } from "@/lib/tmdb";
@@ -8,11 +9,12 @@ import { getTrending } from "@/lib/tmdb";
 export const metadata = { title: "Découvrir · Rembobine" };
 
 export default async function DiscoverPage() {
-  const [recos, movies, shows, library] = await Promise.all([
+  const [recos, movies, shows, library, people] = await Promise.all([
     getPersonalRecommendations(),
     getTrending("movie", "week"),
     getTrending("tv", "week"),
     listEntries(),
+    getPeopleRecommendations().catch(() => []),
   ]);
   const owned = new Set(library.map((e) => `${e.mediaType}:${e.tmdbId}`));
   const withAdd = (items: Title[]) =>
@@ -40,6 +42,18 @@ export default async function DiscoverPage() {
           }))}
         />
       </section>
+      {people.map((p) => (
+        <Shelf
+          key={p.person.id}
+          title={`Parce que tu aimes ${p.person.name}`}
+          href={`/personne/${p.person.id}`}
+          items={p.items.map((t) => ({
+            ...t,
+            actions: "reco" as const,
+            note: [t.year, t.role].filter(Boolean).join(" · ") || undefined,
+          }))}
+        />
+      ))}
       <RankedShelf title="Top 10 des films cette semaine" items={withAdd(movies.slice(0, 10))} />
       <RankedShelf title="Top 10 des séries cette semaine" items={withAdd(shows.slice(0, 10))} />
     </>

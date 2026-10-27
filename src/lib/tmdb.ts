@@ -35,6 +35,8 @@ export type TitleDetails = Title & {
   seasons: { season_number: number; episode_count: number; name: string }[];
   status: string;
   cast: { id: number; name: string; character: string; profile_path: string | null }[];
+  /** Réalisation (films) ou création (séries). */
+  directors: { id: number; name: string }[];
   providers: { flatrate: Provider[]; rent: Provider[]; buy: Provider[]; link?: string };
 };
 
@@ -139,7 +141,8 @@ type RawDetails = RawTitle & {
   episode_run_time?: number[];
   seasons?: { season_number: number; episode_count: number; name: string }[];
   status?: string;
-  credits?: { cast: TitleDetails["cast"] };
+  credits?: { cast: TitleDetails["cast"]; crew?: { id: number; name: string; job: string }[] };
+  created_by?: { id: number; name: string }[];
   "watch/providers"?: {
     results: Record<string, { link?: string; flatrate?: Provider[]; rent?: Provider[]; buy?: Provider[] }>;
   };
@@ -165,6 +168,10 @@ export async function getDetails(type: MediaType, id: number): Promise<TitleDeta
     seasons: (raw.seasons ?? []).filter((s) => s.season_number > 0),
     status: raw.status ?? "",
     cast: (raw.credits?.cast ?? []).slice(0, 10),
+    directors:
+      type === "tv"
+        ? (raw.created_by ?? []).map(({ id, name }) => ({ id, name }))
+        : (raw.credits?.crew ?? []).filter((c) => c.job === "Director").map(({ id, name }) => ({ id, name })),
     providers: {
       flatrate: local?.flatrate ?? [],
       rent: local?.rent ?? [],
@@ -213,5 +220,65 @@ export async function getEpisodeStatus(id: number): Promise<EpisodeStatus | null
     lastAired: episode(raw.last_episode_to_air),
     next: episode(raw.next_episode_to_air),
     ended: raw.status === "Ended" || raw.status === "Canceled",
+  };
+}
+
+type RawCredit = RawTitle & { character?: string; job?: string };
+
+export type PersonCredit = Title & { role: string };
+
+export type Person = {
+  id: number;
+  name: string;
+  profilePath: string | null;
+  biography: string;
+  birthday: string | null;
+  placeOfBirth: string | null;
+  department: string;
+  /** Rôles, du plus connu au moins connu. */
+  acting: PersonCredit[];
+  /** Réalisation et création. */
+  directing: PersonCredit[];
+};
+
+/** Dédoublonne (une série peut apparaître plusieurs fois) et trie par popularité. */
+function credits(raws: RawCredit[], role: (r: RawCredit) => string) {
+  const seen = new Map<string, PersonCredit>();
+  for (const raw of raws) {
+    const t = normalize(raw);
+    if (!t) continue;
+    const k = `${t.mediaType}:${t.id}`;
+    if (!seen.has(k)) seen.set(k, { ...t, role: role(raw) });
+  }
+  return [...seen.values()].sort((a, b) => b.popularity - a.popularity);
+}
+
+export async function getPerson(id: number): Promise<Person | null> {
+  let raw: {
+    id: number;
+    name: string;
+    profile_path: string | null;
+    biography?: string;
+    birthday?: string | null;
+    place_of_birth?: string | null;
+    known_for_department?: string;
+    combined_credits?: { cast?: RawCredit[]; crew?: RawCredit[] };
+  };
+  try {
+    raw = await tmdb(`/person/${id}`, { append_to_response: "combined_credits" });
+  } catch {
+    return null;
+  }
+  const crew = (raw.combined_credits?.crew ?? []).filter((c) => c.job === "Director" || c.job === "Creator");
+  return {
+    id: raw.id,
+    name: raw.name,
+    profilePath: raw.profile_path,
+    biography: raw.biography ?? "",
+    birthday: raw.birthday ?? null,
+    placeOfBirth: raw.place_of_birth ?? null,
+    department: raw.known_for_department ?? "",
+    acting: credits(raw.combined_credits?.cast ?? [], (c) => c.character ?? ""),
+    directing: credits(crew, (c) => (c.job === "Creator" ? "Création" : "Réalisation")),
   };
 }
