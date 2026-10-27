@@ -124,3 +124,7 @@ export async function syncEntry(title: TitleRef) {
     .set(set)
     .where(and(eq(entries.mediaType, title.mediaType), eq(entries.tmdbId, title.tmdbId)));
 }
+
+export async function listAllViewings() {
+  return db().select().from(viewings);
+}

@@ -15,3 +15,8 @@ export const MEDIA_LABELS: Record<MediaType, string> = {
 export function titleHref(t: { mediaType: MediaType; id: number }) {
   return t.mediaType === "movie" ? `/film/${t.id}` : `/serie/${t.id}`;
 }
+
+/** « 7,5 » plutôt que « 7.5 ». */
+export function formatRating(rating: number) {
+  return rating.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+}

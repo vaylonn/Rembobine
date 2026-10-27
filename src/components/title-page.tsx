@@ -1,12 +1,15 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StarIcon } from "@/components/icons";
 import { Shelf } from "@/components/poster-card";
 import { ScrollRow } from "@/components/scroll-row";
+import { ListPicker } from "@/components/list-controls";
 import { TrackPanel } from "@/components/track-panel";
 import { MEDIA_LABELS } from "@/lib/labels";
 import { listViewings } from "@/lib/history";
 import { getEntry, listEntries } from "@/lib/library";
+import { listLists, listsContaining } from "@/lib/lists";
 import type { MediaType } from "@/lib/schema";
 import { getDetails, getRecommendationsFor, imageUrl, type Provider } from "@/lib/tmdb";
 
@@ -36,12 +39,14 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
   const id = Number(rawId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const [details, entry, similar, library, viewings] = await Promise.all([
+  const [details, entry, similar, library, viewings, lists, inLists] = await Promise.all([
     getDetails(mediaType, id),
     getEntry(mediaType, id),
     getRecommendationsFor(mediaType, id).catch(() => []),
     listEntries(),
     listViewings({ mediaType, tmdbId: id }),
+    listLists(),
+    listsContaining(mediaType, id),
   ]);
   if (!details) notFound();
 
@@ -81,6 +86,19 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
             <div className="space-y-3">
               <h1 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{details.title}</h1>
               {details.tagline && <p className="italic text-fg/70">{details.tagline}</p>}
+              {details.directors.length > 0 && (
+                <p className="text-sm text-fg/80">
+                  {mediaType === "tv" ? "Création" : "Réalisation"} :{" "}
+                  {details.directors.map((d, i) => (
+                    <span key={d.id}>
+                      {i > 0 && ", "}
+                      <Link href={`/personne/${d.id}`} className="font-medium text-fg underline-offset-4 hover:text-accent hover:underline">
+                        {d.name}
+                      </Link>
+                    </span>
+                  ))}
+                </p>
+              )}
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fg/80">
                 {details.voteAverage > 0 && (
                   <span className="inline-flex items-center gap-1 font-semibold text-accent">
@@ -112,11 +130,18 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
                 season: entry?.season ?? null,
                 episode: entry?.episode ?? null,
               }}
+              notes={entry?.notes ?? null}
               initial={
                 entry
                   ? { status: entry.status, rating: entry.rating, season: entry.season, episode: entry.episode }
                   : null
               }
+            />
+            <ListPicker
+              mediaType={mediaType}
+              tmdbId={id}
+              lists={lists.map((l) => ({ id: l.id, name: l.name }))}
+              initial={inLists}
             />
             <div className="flex flex-wrap gap-8">
               <Providers label="En streaming" items={details.providers.flatrate} />
@@ -134,7 +159,7 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
             {details.cast.map((c) => {
               const photo = imageUrl(c.profile_path, "w185");
               return (
-                <div key={c.id} className="w-24 shrink-0 snap-start text-center sm:w-28">
+                <Link key={c.id} href={`/personne/${c.id}`} className="group w-24 shrink-0 snap-start text-center sm:w-28">
                   <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface-2 ring-1 ring-white/10">
                     {photo ? (
                       <Image src={photo} alt={c.name} fill sizes="112px" className="object-cover" />
@@ -144,9 +169,9 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 line-clamp-1 text-sm font-medium">{c.name}</p>
+                  <p className="mt-2 line-clamp-1 text-sm font-medium transition group-hover:text-accent">{c.name}</p>
                   {c.character && <p className="line-clamp-1 text-xs text-muted">{c.character}</p>}
-                </div>
+                </Link>
               );
             })}
           </ScrollRow>

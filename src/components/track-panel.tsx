@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { trackTitle, untrackTitle, type HistoryState } from "@/app/actions";
 import { EpisodeTracker, MovieHistory } from "@/components/history-panel";
+import { NotesField } from "@/components/notes-field";
+import { formatRating } from "@/lib/labels";
 import { STATUS_LABELS } from "@/lib/labels";
 import { STATUSES, type MediaType, type Status } from "@/lib/schema";
 
@@ -12,9 +14,10 @@ type Props = {
   initial: { status: Status; rating: number | null; season: number | null; episode: number | null } | null;
   seasons: { season_number: number; episode_count: number }[];
   history: HistoryState;
+  notes: string | null;
 };
 
-export function TrackPanel({ mediaType, tmdbId, initial, seasons, history: initialHistory }: Props) {
+export function TrackPanel({ mediaType, tmdbId, initial, seasons, history: initialHistory, notes }: Props) {
   const [state, setState] = useState(initial);
   const [history, setHistory] = useState(initialHistory);
   const [pending, startTransition] = useTransition();
@@ -87,26 +90,48 @@ export function TrackPanel({ mediaType, tmdbId, initial, seasons, history: initi
       {state && (
         <>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Ta note</p>
+            <p className="mb-2 flex items-baseline gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
+              Ta note
+              {state.rating !== null && (
+                <span className="font-display text-sm normal-case tracking-normal text-accent">
+                  {formatRating(state.rating)} / 10
+                </span>
+              )}
+            </p>
             <div className="flex flex-wrap gap-1">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={pending}
-                  onClick={() => save({ ...state, rating: state.rating === n ? null : n })}
-                  className={`h-8 w-8 rounded-full text-sm font-semibold transition ${
-                    state.rating !== null && n <= state.rating
-                      ? "bg-accent text-accent-fg"
-                      : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg"
-                  }`}
-                  aria-label={`Noter ${n} sur 10`}
-                >
-                  {n}
-                </button>
-              ))}
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+                const full = state.rating !== null && n <= state.rating;
+                const half = state.rating === n - 0.5;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    disabled={pending}
+                    // Un deuxième appui retire un demi-point, un troisième efface la note.
+                    onClick={() =>
+                      save({
+                        ...state,
+                        rating: state.rating === n ? n - 0.5 : state.rating === n - 0.5 ? null : n,
+                      })
+                    }
+                    className={`h-8 w-8 rounded-full text-sm font-semibold transition ${
+                      full
+                        ? "bg-accent text-accent-fg"
+                        : half
+                          ? "bg-[linear-gradient(90deg,var(--color-accent)_50%,rgba(255,255,255,0.05)_50%)] text-fg"
+                          : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg"
+                    }`}
+                    aria-label={`Noter ${n} sur 10`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
             </div>
+            <p className="mt-1.5 text-xs text-muted">Appuie deux fois sur une note pour retirer un demi-point.</p>
           </div>
+
+          <NotesField mediaType={mediaType} tmdbId={tmdbId} initial={notes} />
 
           {mediaType === "tv" && seasons.length > 0 && (
             <EpisodeTracker
