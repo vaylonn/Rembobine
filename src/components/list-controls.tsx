@@ -150,8 +150,8 @@ export function ListPicker({
         <PlusIcon width={16} height={16} />
         {inLists.size ? `Dans ${inLists.size} liste${inLists.size > 1 ? "s" : ""}` : "Ajouter à une liste"}
       </button>
+      {/* Ouvert vers le haut : le bandeau de la fiche coupe ce qui déborde en bas. */}
       {open && (
-        {/* Ouvert vers le haut : le bandeau de la fiche coupe ce qui déborde en bas. */}
         <div className="absolute bottom-full left-0 z-20 mb-2 w-64 rounded-2xl border border-white/10 bg-surface-2/95 p-2 shadow-2xl backdrop-blur-xl">
           {all.map((l) => (
             <button
