@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HouseflixPanel } from "@/components/houseflix-panel";
 import { StarIcon } from "@/components/icons";
 import { Shelf } from "@/components/poster-card";
 import { ScrollRow } from "@/components/scroll-row";
@@ -8,6 +9,7 @@ import { ListPicker } from "@/components/list-controls";
 import { TrackPanel } from "@/components/track-panel";
 import { MEDIA_LABELS } from "@/lib/labels";
 import { listViewings } from "@/lib/history";
+import { houseflixDemo, houseflixUrl } from "@/lib/houseflix";
 import { getEntry, listEntries } from "@/lib/library";
 import { listLists, listsContaining } from "@/lib/lists";
 import type { MediaType } from "@/lib/schema";
@@ -137,6 +139,9 @@ export async function TitlePage({ mediaType, rawId }: { mediaType: MediaType; ra
                   : null
               }
             />
+            {(houseflixUrl() || houseflixDemo()) && (
+              <HouseflixPanel mediaType={mediaType} tmdbId={id} tvdbId={details.tvdbId} demo={houseflixDemo()} />
+            )}
             <ListPicker
               mediaType={mediaType}
               tmdbId={id}

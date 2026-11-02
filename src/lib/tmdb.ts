@@ -38,6 +38,8 @@ export type TitleDetails = Title & {
   /** Réalisation (films) ou création (séries). */
   directors: { id: number; name: string }[];
   providers: { flatrate: Provider[]; rent: Provider[]; buy: Provider[]; link?: string };
+  /** Identifiant TheTVDB, utilisé par Sonarr. */
+  tvdbId: number | null;
 };
 
 type RawTitle = {
@@ -143,6 +145,7 @@ type RawDetails = RawTitle & {
   status?: string;
   credits?: { cast: TitleDetails["cast"]; crew?: { id: number; name: string; job: string }[] };
   created_by?: { id: number; name: string }[];
+  external_ids?: { tvdb_id?: number | null };
   "watch/providers"?: {
     results: Record<string, { link?: string; flatrate?: Provider[]; rent?: Provider[]; buy?: Provider[] }>;
   };
@@ -152,7 +155,7 @@ export async function getDetails(type: MediaType, id: number): Promise<TitleDeta
   let raw: RawDetails;
   try {
     raw = await tmdb<RawDetails>(`/${type}/${id}`, {
-      append_to_response: "credits,watch/providers",
+      append_to_response: "credits,watch/providers,external_ids",
     });
   } catch {
     return null;
@@ -178,6 +181,7 @@ export async function getDetails(type: MediaType, id: number): Promise<TitleDeta
       buy: local?.buy ?? [],
       link: local?.link,
     },
+    tvdbId: raw.external_ids?.tvdb_id ?? null,
   };
 }
 

@@ -37,6 +37,10 @@ Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
   ont repris.
 - **Bibliothèque** filtrable par type et statut, avec recherche, tri, pagination
   et quelques statistiques.
+- **HouseFlix** (optionnel) : sur la fiche d'un titre, télécharge-le via
+  Radarr/Sonarr sur ton Raspberry Pi et regarde les films depuis Jellyfin,
+  sans rien exposer sur Internet (tout passe par Tailscale). Installation dans
+  [`houseflix-proxy/README.md`](houseflix-proxy/README.md).
 - Accès protégé par un **mot de passe unique**, avec blocage temporaire après
   5 essais ratés depuis une même adresse (30 au total) en 15 minutes.
 
