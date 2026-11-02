@@ -1,0 +1,151 @@
+# HouseFlix : stack média pour Raspberry Pi 4 (arm64).
+# qBittorrent et Prowlarr n'ont pas d'autre réseau que le tunnel Mullvad de gluetun (kill switch).
+# Aucun port à ouvrir sur la box : l'accès distant passe par Tailscale, installé sur l'hôte.
+# Voir docs/architecture.md.
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TZ=${TZ}
+      - VPN_SERVICE_PROVIDER=mullvad
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - SERVER_COUNTRIES=${VPN_COUNTRIES}
+      - SERVER_HOSTNAMES=${VPN_HOSTNAMES}
+      - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET},172.16.0.0/12
+      - DOT=on
+    ports:
+      - 8080:8080   # qBittorrent
+      - 9696:9696   # Prowlarr
+    extra_hosts:    # le DNS de gluetun ne connaît pas les noms Docker -> IP fixes
+      - sonarr:172.30.0.10
+      - radarr:172.30.0.11
+    networks:
+      default:
+    volumes:
+      - ${CONFIG_ROOT}/gluetun:/gluetun
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    labels:
+      - autoheal=true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf --max-time 10 -o /dev/null https://1.1.1.1 || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+    volumes:
+      - ${CONFIG_ROOT}/qbittorrent:/config
+      - ${DATA_ROOT}:/data
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    labels:
+      - autoheal=true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf --max-time 10 -o /dev/null https://1.1.1.1 || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment: ["PUID=${PUID}", "PGID=${PGID}", "TZ=${TZ}"]
+    volumes: ["${CONFIG_ROOT}/prowlarr:/config"]
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
+    environment: ["PUID=${PUID}", "PGID=${PGID}", "TZ=${TZ}"]
+    ports: ["8989:8989"]
+    volumes: ["${CONFIG_ROOT}/sonarr:/config", "${DATA_ROOT}:/data"]
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    networks:
+      default:
+        ipv4_address: 172.30.0.11
+    environment: ["PUID=${PUID}", "PGID=${PGID}", "TZ=${TZ}"]
+    ports: ["7878:7878"]
+    volumes: ["${CONFIG_ROOT}/radarr:/config", "${DATA_ROOT}:/data"]
+    restart: unless-stopped
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment: ["PUID=${PUID}", "PGID=${PGID}", "TZ=${TZ}"]
+    ports: ["8096:8096"]
+    volumes: ["${CONFIG_ROOT}/jellyfin:/config", "${DATA_ROOT}/media:/data/media:ro"]
+    restart: unless-stopped
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
+    environment: ["TZ=${TZ}"]
+    ports: ["5055:5055"]
+    volumes: ["${CONFIG_ROOT}/seerr:/app/config"]
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    ports:
+      - "6767:6767"
+    volumes:
+      - ${CONFIG_ROOT}/bazarr:/config
+      - ${DATA_ROOT}:/data
+    restart: unless-stopped
+
+  # Relance qbittorrent et prowlarr quand leur healthcheck échoue (après un redémarrage de gluetun).
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=120
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    network_mode: none
+    restart: unless-stopped
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
