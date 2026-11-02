@@ -41,7 +41,8 @@ Pensée pour un seul utilisateur et un déploiement gratuit sur Vercel.
   Radarr/Sonarr sur ton Raspberry Pi et regarde les films depuis Jellyfin,
   sans rien exposer sur Internet (tout passe par Tailscale). Installation dans
   [`houseflix-proxy/README.md`](houseflix-proxy/README.md). La stack du Pi
-  elle-même est documentée dans [`houseflix/`](houseflix/README.md).
+  elle-même est documentée dans le dépôt
+  [vaylonn/houseflix](https://github.com/vaylonn/houseflix).
 - Accès protégé par un **mot de passe unique**, avec blocage temporaire après
   5 essais ratés depuis une même adresse (30 au total) en 15 minutes.
 
